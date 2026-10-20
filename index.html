@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nakliye Maliyet Hesaplama</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e9edf1;--card:#fff;--ink:#14191f;--mute:#5d6975;--line:#d3dae1;--amber:#f2b400;--amber-ink:#14191f;--soft:#f4f6f8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1317;--card:#1a2027;--ink:#eef1f4;--mute:#98a4b0;--line:#2c353f;--soft:#222a33}}
+:root[data-theme="dark"]{--bg:#0f1317;--card:#1a2027;--ink:#eef1f4;--mute:#98a4b0;--line:#2c353f;--soft:#222a33}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Barlow,system-ui,sans-serif}
+main{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+h1{font:700 30px/1.1 "Barlow Condensed",Barlow,sans-serif;margin:8px 0 4px;letter-spacing:.2px}
+.sub{color:var(--mute);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
+.rail{display:flex;gap:6px;margin-bottom:18px}
+.rail i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.rail i.on{background:var(--amber)}
+label.q{display:block;font:600 24px/1.2 "Barlow Condensed",Barlow,sans-serif;margin-bottom:12px}
+.field{display:flex;align-items:center;border:2px solid var(--line);border-radius:8px;background:var(--soft);overflow:hidden}
+.field:focus-within{border-color:var(--amber)}
+.field input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:600 28px Barlow,sans-serif;padding:12px 14px;outline:none}
+.field span{padding:0 14px;color:var(--mute);font-weight:500;white-space:nowrap}
+.hint{color:var(--mute);font-size:14px;margin:8px 0 0}
+.err{color:#c0392b;font-size:14px;margin:8px 0 0;min-height:1.2em}
+.row{display:flex;gap:10px;margin-top:18px}
+button{font:600 16px Barlow,sans-serif;border-radius:8px;padding:12px 18px;cursor:pointer;border:2px solid var(--line);background:transparent;color:var(--ink)}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+button.go{flex:1;background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+button:disabled{opacity:.4;cursor:default}
+details{margin-top:14px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 16px}
+summary{cursor:pointer;padding:14px 0;font-weight:600}
+.set{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-bottom:14px}
+.set label{font-size:14px;color:var(--mute);display:block}
+.set .field input{font-size:18px;padding:8px 10px}
+.set .field span{padding:0 10px;font-size:13px}
+.chk{grid-column:1/-1;display:flex;gap:10px;align-items:center;color:var(--ink)!important;font-size:15px!important}
+.chk input{width:20px;height:20px;accent-color:var(--amber)}
+.tot{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);padding-top:12px;margin-top:6px}
+.tot b{font:700 40px/1 "Barlow Condensed",Barlow,sans-serif}
+.ln{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}
+.ln small{display:block;color:var(--mute);font-size:13px}
+.ln strong{font-variant-numeric:tabular-nums}
+.kar{margin-top:18px;background:var(--soft);border-radius:10px;padding:16px}
+.kar .field input{font-size:20px;padding:8px 12px}
+.offer{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+.offer b{font:700 32px/1 "Barlow Condensed",Barlow,sans-serif;background:var(--amber);color:var(--amber-ink);padding:4px 10px;border-radius:6px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>Nakliye maliyet hesabı</h1>
+<p class="sub">Dört soruya cevap ver, işin maliyetini gör. Kârı sen belirlersin.</p>
+
+<div class="card" id="wiz">
+  <div class="rail" id="rail"></div>
+  <label class="q" id="q" for="inp"></label>
+  <div class="field"><input id="inp" inputmode="decimal" autocomplete="off"><span id="unit"></span></div>
+  <p class="hint" id="hint"></p>
+  <p class="err" id="err" role="alert"></p>
+  <div class="row"><button id="back">Geri</button><button class="go" id="next">İleri</button></div>
+</div>
+
+<div class="card hide" id="res">
+  <div id="lines"></div>
+  <div class="tot"><span>Toplam maliyet</span><b id="total"></b></div>
+  <p class="hint" id="perkm"></p>
+  <div class="kar">
+    <label for="margin" style="font-weight:600">Kâr oranı</label>
+    <div class="field" style="margin-top:8px"><input id="margin" inputmode="decimal" value="20"><span>%</span></div>
+    <div class="offer"><span>Teklif fiyatı<small style="display:block;color:var(--mute)" id="profit"></small></span><b id="offer"></b></div>
+  </div>
+  <div class="row"><button id="edit">Değerleri düzenle</button><button class="go" id="again">Yeni hesap</button></div>
+</div>
+
+<details>
+  <summary>Araç ayarları</summary>
+  <div class="set">
+    <div><label for="cons">Yakıt tüketimi</label><div class="field"><input id="cons" inputmode="decimal"><span>L / 100 km</span></div></div>
+    <div><label for="amort">Amortisman bedeli</label><div class="field"><input id="amort" inputmode="decimal"><span>TL / km</span></div></div>
+    <label class="chk"><input type="checkbox" id="rt"> Dönüş yolu da hesaplansın (km iki katı sayılır)</label>
+  </div>
+</details>
+</main>
+
+<script>
+(function(){
+var steps=[
+ {k:'fuel',q:'Güncel yakıt litre fiyatı nedir?',u:'TL / litre',h:'Pompa fiyatı, örneğin 45,50'},
+ {k:'km',q:'Bu iş sırasında kaç km yol gidilecek?',u:'km',h:'Tek yön mesafe. Gidiş-dönüş için aşağıdaki araç ayarını aç.'},
+ {k:'crew',q:'Kaç kişilik taşıma personeli çalışacak?',u:'kişi',h:'Şoför dahil değil, sadece taşıma personeli.'},
+ {k:'wage',q:'Personel kişi başı ücreti ne kadar?',u:'TL / kişi',h:'Bu iş için her bir personele ödenecek tutar.'}
+];
+var vals={},cur=0,S={cons:25,amort:4,rt:false};
+var $=function(i){return document.getElementById(i)};
+try{var s=JSON.parse(localStorage.getItem('nk-set')||'null');if(s)S=Object.assign(S,s)}catch(e){}
+function save(){try{localStorage.setItem('nk-set',JSON.stringify(S))}catch(e){}}
+function num(v){var n=parseFloat(String(v).trim().replace(/\./g,function(m,o,str){return /,/.test(str)?'':m}).replace(',','.'));return isFinite(n)?n:NaN}
+function tl(n){return n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL'}
+function fmt(n){return n.toLocaleString('tr-TR',{maximumFractionDigits:2})}
+function draw(){
+  var st=steps[cur];
+  $('rail').innerHTML=steps.map(function(_,i){return '<i class="'+(i<=cur?'on':'')+'"></i>'}).join('');
+  $('q').textContent=st.q;$('unit').textContent=st.u;$('hint').textContent=st.h;$('err').textContent='';
+  $('inp').value=vals[st.k]!==undefined?String(vals[st.k]).replace('.',','):'';
+  $('back').disabled=cur===0;
+  $('next').textContent=cur===steps.length-1?'Maliyeti hesapla':'İleri';
+  $('inp').focus();
+}
+function next(){
+  var st=steps[cur],n=num($('inp').value);
+  if(isNaN(n)||n<0||(st.k==='crew'&&(n<1||n%1!==0))||(st.k!=='crew'&&st.k!=='wage'&&n<=0)){
+    $('err').textContent=st.k==='crew'?'Personel sayısı 1 veya daha büyük bir tam sayı olmalı.':'Geçerli bir sayı gir.';return}
+  vals[st.k]=n;
+  if(cur<steps.length-1){cur++;draw()}else{calc()}
+}
+function calc(){
+  var km=vals.km*(S.rt?2:1);
+  var fuelCost=km*S.cons/100*vals.fuel;
+  var crewCost=vals.crew*vals.wage;
+  var amCost=km*S.amort;
+  var total=fuelCost+crewCost+amCost;
+  var rows=[
+   ['Yakıt',fmt(km)+' km × '+fmt(S.cons)+' L/100 km × '+tl(vals.fuel).replace(' TL','')+' TL',fuelCost],
+   ['Personel',vals.crew+' kişi × '+tl(vals.wage),crewCost],
+   ['Araç amortismanı',fmt(km)+' km × '+tl(S.amort),amCost]];
+  $('lines').innerHTML=rows.map(function(r){return '<div class="ln"><span>'+r[0]+'<small>'+r[1]+'</small></span><strong>'+tl(r[2])+'</strong></div>'}).join('');
+  $('total').textContent=tl(total);
+  $('perkm').textContent='Km başına maliyet: '+tl(total/km)+(S.rt?' (gidiş-dönüş '+fmt(km)+' km)':'');
+  res.total=total;
+  $('wiz').classList.add('hide');$('res').classList.remove('hide');offer();
+}
+var res={total:0};
+function offer(){
+  var m=num($('margin').value);if(isNaN(m))m=0;
+  var p=res.total*m/100;
+  $('offer').textContent=tl(res.total+p);
+  $('profit').textContent='Kâr: '+tl(p);
+}
+$('next').onclick=next;
+$('back').onclick=function(){if(cur>0){cur--;draw()}};
+$('inp').onkeydown=function(e){if(e.key==='Enter')next()};
+$('margin').oninput=offer;
+$('edit').onclick=function(){cur=0;$('res').classList.add('hide');$('wiz').classList.remove('hide');draw()};
+$('again').onclick=function(){vals={};cur=0;$('res').classList.add('hide');$('wiz').classList.remove('hide');draw()};
+$('cons').value=String(S.cons).replace('.',',');$('amort').value=String(S.amort).replace('.',',');$('rt').checked=S.rt;
+function setup(id,key){$(id).oninput=function(){var n=num($(id).value);if(!isNaN(n)&&n>=0){S[key]=n;save();if(!$('res').classList.contains('hide'))calc()}}}
+setup('cons','cons');setup('amort','amort');
+$('rt').onchange=function(){S.rt=$('rt').checked;save();if(!$('res').classList.contains('hide'))calc()};
+draw();
+})();
+</script>
+</body>
+</html>
