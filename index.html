@@ -29,38 +29,56 @@ label.q{display:block;font:600 24px/1.2 "Barlow Condensed",Barlow,sans-serif;mar
 .err{color:#c0392b;font-size:14px;margin:8px 0 0;min-height:1.2em}
 .row{display:flex;gap:10px;margin-top:18px}
 button{font:600 16px Barlow,sans-serif;border-radius:8px;padding:12px 18px;cursor:pointer;border:2px solid var(--line);background:transparent;color:var(--ink)}
-button:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 button.go{flex:1;background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
 button:disabled{opacity:.4;cursor:default}
 details{margin-top:14px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 16px}
 summary{cursor:pointer;padding:14px 0;font-weight:600}
 .set{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-bottom:14px}
-.set label{font-size:14px;color:var(--mute);display:block}
-.set .field input{font-size:18px;padding:8px 10px}
-.set .field span{padding:0 10px;font-size:13px}
+.set label,.lb{font-size:14px;color:var(--mute);display:block}
+.set .field input,.tr .field input{font-size:18px;padding:8px 10px}
+.set .field span,.tr .field span{padding:0 10px;font-size:13px}
 .chk{grid-column:1/-1;display:flex;gap:10px;align-items:center;color:var(--ink)!important;font-size:15px!important}
 .chk input{width:20px;height:20px;accent-color:var(--amber)}
+select{width:100%;font:500 16px Barlow,sans-serif;padding:10px;border:2px solid var(--line);border-radius:8px;background:var(--soft);color:var(--ink);margin:4px 0}
+.tr{display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:15px}
+.tr .x{grid-column:1/-1;justify-self:start;padding:2px 10px;font-size:13px}
+.add{display:grid;grid-template-columns:1fr 90px auto;gap:8px;margin-top:12px}
+.add input{border:2px solid var(--line);border-radius:8px;background:var(--soft);color:var(--ink);font:500 15px Barlow,sans-serif;padding:8px;min-width:0}
+.add button{padding:8px 14px}
+#pk{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:0 10px}
+.pr{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.pr:last-child{border-bottom:0}
+.pr label{flex:1;display:flex;gap:10px;align-items:center;cursor:pointer}
+.pr input[type=checkbox]{width:20px;height:20px;accent-color:var(--amber);flex:none}
+.pp{color:var(--mute);font-size:14px;white-space:nowrap}
+.cnt{width:56px;border:2px solid var(--amber);border-radius:6px;background:var(--soft);color:var(--ink);font:600 16px Barlow,sans-serif;padding:4px;text-align:center}
 .tot{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);padding-top:12px;margin-top:6px}
 .tot b{font:700 40px/1 "Barlow Condensed",Barlow,sans-serif}
-.ln{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}
+.ln{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
 .ln small{display:block;color:var(--mute);font-size:13px}
-.ln strong{font-variant-numeric:tabular-nums}
+.ln strong{font-variant-numeric:tabular-nums;white-space:nowrap}
 .kar{margin-top:18px;background:var(--soft);border-radius:10px;padding:16px}
 .kar .field input{font-size:20px;padding:8px 12px}
 .offer{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
 .offer b{font:700 32px/1 "Barlow Condensed",Barlow,sans-serif;background:var(--amber);color:var(--amber-ink);padding:4px 10px;border-radius:6px}
+.yn{display:flex;gap:10px}
+.yn button{flex:1;padding:18px 12px;font-size:18px}
+.yn button.sel{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
 .hide{display:none}
 </style>
 </head>
 <body>
 <main>
 <h1>Nakliye maliyet hesabı</h1>
-<p class="sub">Dört soruya cevap ver, işin maliyetini gör. Kârı sen belirlersin.</p>
+<p class="sub">Birkaç soruya cevap ver, işin maliyetini gör. Kârı sen belirlersin.</p>
 
 <div class="card" id="wiz">
   <div class="rail" id="rail"></div>
   <label class="q" id="q" for="inp"></label>
-  <div class="field"><input id="inp" inputmode="decimal" autocomplete="off"><span id="unit"></span></div>
+  <div class="field" id="fld"><input id="inp" inputmode="decimal" autocomplete="off"><span id="unit"></span></div>
+  <div class="yn hide" id="yn"><button type="button" data-v="1"></button><button type="button" data-v="0"></button></div>
+  <div class="hide" id="pk"></div>
   <p class="hint" id="hint"></p>
   <p class="err" id="err" role="alert"></p>
   <div class="row"><button id="back">Geri</button><button class="go" id="next">İleri</button></div>
@@ -83,7 +101,24 @@ summary{cursor:pointer;padding:14px 0;font-weight:600}
   <div class="set">
     <div><label for="cons">Yakıt tüketimi</label><div class="field"><input id="cons" inputmode="decimal"><span>L / 100 km</span></div></div>
     <div><label for="amort">Amortisman bedeli</label><div class="field"><input id="amort" inputmode="decimal"><span>TL / km</span></div></div>
-    <label class="chk"><input type="checkbox" id="rt"> Dönüş yolu da hesaplansın (km iki katı sayılır)</label>
+    <label class="chk"><input type="checkbox" id="rt"> Dönüş yolu da hesaplansın (km iki katı sayılır, ücretli yol geçişleri varsayılan 2 olur)</label>
+  </div>
+</details>
+
+<details>
+  <summary>Ücretli yol ayarları</summary>
+  <div style="padding-bottom:14px">
+    <label class="lb" for="cls">Araç sınıfı</label>
+    <select id="cls">
+      <option value="1">1. sınıf: otomobil (aks aralığı 3,20 m altı)</option>
+      <option value="2">2. sınıf: kamyonet, minibüs (2 akslı, 3,20 m ve üstü)</option>
+      <option value="3">3. sınıf: 3 akslı araç</option>
+      <option value="4">4. sınıf: 4 ve 5 akslı araç</option>
+      <option value="5">5. sınıf: 6 ve üzeri akslı araç</option>
+    </select>
+    <p class="hint">Hazır fiyatlar seçili sınıf için, tek geçiş başına, 1 Temmuz 2026 tarifesine göredir. Boş olanları kendin gir. Değiştirdiğin fiyat bu tarayıcıda saklanır. Güncel tarife için kgm.gov.tr sayfasını kontrol et.</p>
+    <div id="tl"></div>
+    <div class="add"><input id="cn" placeholder="Kendi geçişini ekle" aria-label="Geçiş adı"><input id="cp" inputmode="decimal" placeholder="TL" aria-label="Fiyat"><button id="ca" type="button">Ekle</button></div>
   </div>
 </details>
 </main>
@@ -92,67 +127,132 @@ summary{cursor:pointer;padding:14px 0;font-weight:600}
 (function(){
 var steps=[
  {k:'fuel',q:'Güncel yakıt litre fiyatı nedir?',u:'TL / litre',h:'Pompa fiyatı, örneğin 45,50'},
- {k:'km',q:'Bu iş sırasında kaç km yol gidilecek?',u:'km',h:'Tek yön mesafe. Gidiş-dönüş için aşağıdaki araç ayarını aç.'},
+ {k:'km',q:'Bu iş sırasında kaç km yol gidilecek?',u:'km',h:'Tek yön mesafe. Gidiş-dönüş için araç ayarlarındaki seçeneği aç.'},
+ {k:'has',q:'Bu işte taşıma personeli çalışacak mı?',ch:['Evet, personel var','Hayır, personelsiz'],h:'Personelsiz işlerde personel soruları atlanır.'},
  {k:'crew',q:'Kaç kişilik taşıma personeli çalışacak?',u:'kişi',h:'Şoför dahil değil, sadece taşıma personeli.'},
- {k:'wage',q:'Personel kişi başı ücreti ne kadar?',u:'TL / kişi',h:'Bu iş için her bir personele ödenecek tutar.'}
+ {k:'wage',q:'Personel kişi başı ücreti ne kadar?',u:'TL / kişi',h:'Bu iş için her bir personele ödenecek tutar.'},
+ {k:'toll',q:'Ücretli yoldan geçilecek mi?',ch:['Evet, geçilecek','Hayır, geçilmeyecek'],h:'Köprü, tünel ve otoyol geçişleri.'},
+ {k:'sel',q:'Hangi ücretli yollardan geçilecek?',pick:true,h:'Birden fazla seçebilirsin. Fiyatı olmayan yollar için Ücretli yol ayarları bölümünden fiyat gir.'}
 ];
-var vals={},cur=0,S={cons:25,amort:4,rt:false};
+var B5=[59,75,168,333,440];
+var TOLLS=[
+ {id:'t15',n:'15 Temmuz Şehitler Köprüsü',p:B5},
+ {id:'fsm',n:'Fatih Sultan Mehmet Köprüsü',p:B5},
+ {id:'yss',n:'Yavuz Sultan Selim Köprüsü',p:[110,145,270,690,860]},
+ {id:'osm',n:'Osmangazi Köprüsü (sadece köprü)',p:[1170,1870,2225,2950,3720]},
+ {id:'cnk',n:'1915 Çanakkale Köprüsü',p:[1170,1465,2635,2925,5560]},
+ {id:'avr',n:'Avrasya Tüneli (gündüz)',p:[330]},
+ {id:'izm',n:'Gebze–Orhangazi–İzmir Otoyolu (İzmir çıkışı, Osmangazi dahil)',p:[2895]},
+ {id:'nig',n:'Ankara–Niğde Otoyolu',p:[925]},
+ {id:'kmo',n:'Kuzey Marmara Otoyolu',p:[]},
+ {id:'edi',n:'Edirne–İstanbul Otoyolu',p:[]},
+ {id:'ist',n:'İstanbul–Ankara Otoyolu (Gebze–Ankara)',p:[]},
+ {id:'apz',n:'Ankara–Pozantı Otoyolu',p:[]},
+ {id:'tag',n:'Tarsus–Adana–Gaziantep Otoyolu',p:[]},
+ {id:'iza',n:'İzmir–Aydın Otoyolu',p:[]},
+ {id:'icc',n:'İzmir–Çeşme Otoyolu',p:[]},
+ {id:'mac',n:'Menemen–Aliağa–Çandarlı Otoyolu',p:[]},
+ {id:'mal',n:'Malkara–Çanakkale Otoyolu',p:[]}
+];
+var vals={},cur=0,S={cons:25,amort:4,rt:false,cls:2,ov:{},custom:[]},res={total:0};
 var $=function(i){return document.getElementById(i)};
 try{var s=JSON.parse(localStorage.getItem('nk-set')||'null');if(s)S=Object.assign(S,s)}catch(e){}
+if(!S.ov)S.ov={};if(!S.custom)S.custom=[];
 function save(){try{localStorage.setItem('nk-set',JSON.stringify(S))}catch(e){}}
 function num(v){var n=parseFloat(String(v).trim().replace(/\./g,function(m,o,str){return /,/.test(str)?'':m}).replace(',','.'));return isFinite(n)?n:NaN}
 function tl(n){return n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL'}
 function fmt(n){return n.toLocaleString('tr-TR',{maximumFractionDigits:2})}
-function draw(){
-  var st=steps[cur];
-  $('rail').innerHTML=steps.map(function(_,i){return '<i class="'+(i<=cur?'on':'')+'"></i>'}).join('');
-  $('q').textContent=st.q;$('unit').textContent=st.u;$('hint').textContent=st.h;$('err').textContent='';
-  $('inp').value=vals[st.k]!==undefined?String(vals[st.k]).replace('.',','):'';
-  $('back').disabled=cur===0;
-  $('next').textContent=cur===steps.length-1?'Maliyeti hesapla':'İleri';
-  $('inp').focus();
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function all(){return TOLLS.concat(S.custom.map(function(c){return {id:c.id,n:c.n,custom:true,price:c.price}}))}
+function price(t){if(t.custom)return t.price;var k=t.id+'|'+S.cls;if(S.ov[k]!==undefined)return S.ov[k];return t.p[S.cls-1]||0}
+function list(){return steps.filter(function(s){return !(vals.has===false&&(s.k==='crew'||s.k==='wage'))&&!(vals.toll===false&&s.k==='sel')})}
+function mark(){var st=list()[cur],b=$('yn').children;for(var i=0;i<b.length;i++){b[i].classList.toggle('sel',vals[st.k]!==undefined&&(b[i].dataset.v==='1')===vals[st.k])}}
+function pick(){
+  vals.sel=vals.sel||{};var h='';
+  all().forEach(function(t){var p=price(t),on=vals.sel[t.id]!==undefined;
+    if(!p&&on)delete vals.sel[t.id],on=false;
+    h+='<div class="pr"><label><input type="checkbox" data-id="'+t.id+'"'+(on?' checked':'')+(p?'':' disabled')+'><span>'+esc(t.n)+'</span></label><span class="pp">'+(p?tl(p):'Fiyat yok')+'</span>'+(on?'<input class="cnt" type="number" min="1" max="20" value="'+vals.sel[t.id]+'" data-c="'+t.id+'" aria-label="Geçiş sayısı">':'')+'</div>'});
+  $('pk').innerHTML=h;
 }
+function draw(){
+  var L=list(),st=L[cur];
+  $('rail').innerHTML=L.map(function(_,i){return '<i class="'+(i<=cur?'on':'')+'"></i>'}).join('');
+  $('q').textContent=st.q;$('hint').textContent=st.h;$('err').textContent='';
+  $('fld').classList.toggle('hide',!!(st.ch||st.pick));$('yn').classList.toggle('hide',!st.ch);$('pk').classList.toggle('hide',!st.pick);
+  if(st.ch){$('yn').children[0].textContent=st.ch[0];$('yn').children[1].textContent=st.ch[1];mark()}
+  else if(st.pick){pick()}
+  else{$('unit').textContent=st.u;$('inp').value=vals[st.k]!==undefined?String(vals[st.k]).replace('.',','):'';$('inp').focus()}
+  $('back').disabled=cur===0;
+  $('next').textContent=cur===L.length-1?'Maliyeti hesapla':'İleri';
+}
+function go(){if(cur<list().length-1){cur++;draw()}else{calc()}}
 function next(){
-  var st=steps[cur],n=num($('inp').value);
+  var st=list()[cur],n,k,any=false;
+  if(st.ch){if(vals[st.k]===undefined){$('err').textContent='Bir seçim yap.';return}go();return}
+  if(st.pick){for(k in vals.sel)any=true;if(!any){$('err').textContent='En az bir yol seç ya da geri dönüp Hayır de.';return}go();return}
+  n=num($('inp').value);
   if(isNaN(n)||n<0||(st.k==='crew'&&(n<1||n%1!==0))||(st.k!=='crew'&&st.k!=='wage'&&n<=0)){
     $('err').textContent=st.k==='crew'?'Personel sayısı 1 veya daha büyük bir tam sayı olmalı.':'Geçerli bir sayı gir.';return}
-  vals[st.k]=n;
-  if(cur<steps.length-1){cur++;draw()}else{calc()}
+  vals[st.k]=n;go();
 }
 function calc(){
   var km=vals.km*(S.rt?2:1);
   var fuelCost=km*S.cons/100*vals.fuel;
-  var crewCost=vals.crew*vals.wage;
-  var amCost=km*S.amort;
-  var total=fuelCost+crewCost+amCost;
+  var noCrew=vals.has===false,crewCost=noCrew?0:vals.crew*vals.wage;
+  var amCost=km*S.amort,tollCost=0,tn=[];
+  if(vals.toll&&vals.sel){all().forEach(function(t){var c=vals.sel[t.id];if(c){tollCost+=price(t)*c;tn.push(t.n+(c>1?' ×'+c:''))}})}
+  var total=fuelCost+crewCost+amCost+tollCost;
   var rows=[
    ['Yakıt',fmt(km)+' km × '+fmt(S.cons)+' L/100 km × '+tl(vals.fuel).replace(' TL','')+' TL',fuelCost],
-   ['Personel',vals.crew+' kişi × '+tl(vals.wage),crewCost],
-   ['Araç amortismanı',fmt(km)+' km × '+tl(S.amort),amCost]];
+   ['Personel',noCrew?'Personelsiz iş':vals.crew+' kişi × '+tl(vals.wage),crewCost],
+   ['Araç amortismanı',fmt(km)+' km × '+tl(S.amort),amCost],
+   ['Ücretli yollar',tn.length?esc(tn.join(', ')):'Ücretli yol yok',tollCost]];
   $('lines').innerHTML=rows.map(function(r){return '<div class="ln"><span>'+r[0]+'<small>'+r[1]+'</small></span><strong>'+tl(r[2])+'</strong></div>'}).join('');
   $('total').textContent=tl(total);
   $('perkm').textContent='Km başına maliyet: '+tl(total/km)+(S.rt?' (gidiş-dönüş '+fmt(km)+' km)':'');
   res.total=total;
   $('wiz').classList.add('hide');$('res').classList.remove('hide');offer();
 }
-var res={total:0};
 function offer(){
   var m=num($('margin').value);if(isNaN(m))m=0;
   var p=res.total*m/100;
   $('offer').textContent=tl(res.total+p);
   $('profit').textContent='Kâr: '+tl(p);
 }
+function refresh(){
+  if(!$('res').classList.contains('hide')){calc();return}
+  var st=list()[cur];if(st&&st.pick)pick();
+}
+function renderTl(){
+  $('tl').innerHTML=all().map(function(t){
+    var k=t.id+'|'+S.cls,v=t.custom?t.price:(S.ov[k]!==undefined?S.ov[k]:(t.p[S.cls-1]||''));
+    return '<div class="tr"><span>'+esc(t.n)+'</span><div class="field"><input data-p="'+t.id+'" inputmode="decimal" placeholder="gir" aria-label="'+esc(t.n)+' fiyatı" value="'+String(v).replace('.',',')+'"><span>TL</span></div>'+(t.custom?'<button class="x" data-del="'+t.id+'" type="button">Sil</button>':'')+'</div>'}).join('');
+}
 $('next').onclick=next;
 $('back').onclick=function(){if(cur>0){cur--;draw()}};
 $('inp').onkeydown=function(e){if(e.key==='Enter')next()};
+$('yn').onclick=function(e){var b=e.target.closest('button');if(!b)return;vals[list()[cur].k]=b.dataset.v==='1';mark();next()};
+$('pk').onchange=function(e){var id=e.target.dataset.id;if(!id)return;vals.sel=vals.sel||{};if(e.target.checked)vals.sel[id]=S.rt?2:1;else delete vals.sel[id];pick()};
+$('pk').oninput=function(e){var id=e.target.dataset.c;if(!id)return;var n=parseInt(e.target.value,10);if(n>=1)vals.sel[id]=n};
 $('margin').oninput=offer;
 $('edit').onclick=function(){cur=0;$('res').classList.add('hide');$('wiz').classList.remove('hide');draw()};
 $('again').onclick=function(){vals={};cur=0;$('res').classList.add('hide');$('wiz').classList.remove('hide');draw()};
-$('cons').value=String(S.cons).replace('.',',');$('amort').value=String(S.amort).replace('.',',');$('rt').checked=S.rt;
-function setup(id,key){$(id).oninput=function(){var n=num($(id).value);if(!isNaN(n)&&n>=0){S[key]=n;save();if(!$('res').classList.contains('hide'))calc()}}}
+$('cons').value=String(S.cons).replace('.',',');$('amort').value=String(S.amort).replace('.',',');$('rt').checked=S.rt;$('cls').value=String(S.cls);
+function setup(id,key){$(id).oninput=function(){var n=num($(id).value);if(!isNaN(n)&&n>=0){S[key]=n;save();refresh()}}}
 setup('cons','cons');setup('amort','amort');
-$('rt').onchange=function(){S.rt=$('rt').checked;save();if(!$('res').classList.contains('hide'))calc()};
-draw();
+$('rt').onchange=function(){S.rt=$('rt').checked;save();refresh()};
+$('cls').onchange=function(){S.cls=parseInt($('cls').value,10);save();renderTl();refresh()};
+$('tl').oninput=function(e){var id=e.target.dataset.p;if(!id)return;var raw=e.target.value.trim(),n=num(raw),c;
+  for(var i=0;i<S.custom.length;i++)if(S.custom[i].id===id)c=S.custom[i];
+  if(c){if(!isNaN(n)&&n>=0)c.price=n}
+  else if(raw==='')delete S.ov[id+'|'+S.cls];
+  else if(!isNaN(n)&&n>=0)S.ov[id+'|'+S.cls]=n;
+  save();refresh()};
+$('tl').onclick=function(e){var id=e.target.dataset.del;if(!id)return;
+  S.custom=S.custom.filter(function(c){return c.id!==id});if(vals.sel)delete vals.sel[id];save();renderTl();refresh()};
+$('ca').onclick=function(){var n=$('cn').value.trim(),p=num($('cp').value);if(!n||isNaN(p)||p<=0)return;
+  S.custom.push({id:'c'+Date.now(),n:n,price:p});$('cn').value='';$('cp').value='';save();renderTl();refresh()};
+renderTl();draw();
 })();
 </script>
 </body>
